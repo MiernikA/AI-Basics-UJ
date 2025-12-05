@@ -1,4 +1,5 @@
 import random
+
 from entities.enemy import Enemy
 
 CLUSTER_RADIUS = 200

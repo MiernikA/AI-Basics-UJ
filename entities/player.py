@@ -1,7 +1,8 @@
 import pygame
 from math import atan2, cos, sin
-from core.vector2 import Vector2
+
 from core.collider import CircleCollider
+from core.vector2 import Vector2
 
 
 class Player:

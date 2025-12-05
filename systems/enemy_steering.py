@@ -1,5 +1,6 @@
 import math
 import random
+
 from core.vector2 import Vector2
 
 

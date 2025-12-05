@@ -1,6 +1,7 @@
 import pygame
-from entities.player import Player
+
 from entities.obstacle import Obstacle
+from entities.player import Player
 from systems.enemy_manager import spawn_enemies, trigger_attack_clusters
 
 from systems.map_boundary import resolve_map_collision
@@ -19,7 +20,7 @@ def main():
         Obstacle(300, 300, 60),
         Obstacle(800, 500, 80),
         Obstacle(600, 200, 40),
-        Obstacle(950, 200, 25)
+        Obstacle(950, 200, 25),
     ]
 
     player = Player(WIDTH // 2, HEIGHT // 2)
@@ -81,7 +82,6 @@ def main():
 
         for enemy in enemies:
             enemy.draw(screen)
-
 
         pygame.display.flip()
 
