@@ -160,40 +160,46 @@ def build_obstacles() -> list[list[pygame.Vector2]]:
     return [
         [
             pygame.Vector2(250, 140),
-            pygame.Vector2(380, 140),
+            pygame.Vector2(380, 340),           
             pygame.Vector2(380, 220),
             pygame.Vector2(250, 220),
         ],
+
         [
-            pygame.Vector2(540, 100),
-            pygame.Vector2(680, 150),
-            pygame.Vector2(640, 260),
+            pygame.Vector2(440, 100),
+            pygame.Vector2(680, 150),           
+            pygame.Vector2(740, 310),
             pygame.Vector2(520, 220),
+            pygame.Vector2(680, 190),
         ],
+
         [
-            pygame.Vector2(200, 360),
-            pygame.Vector2(320, 320),
-            pygame.Vector2(360, 420),
-            pygame.Vector2(240, 460),
+            pygame.Vector2(200, 420),
+            pygame.Vector2(100, 360),
+            pygame.Vector2(220, 350),
+            pygame.Vector2(260, 450),
+            pygame.Vector2(140, 550),
         ],
+
         [
-            pygame.Vector2(430, 260),
+            pygame.Vector2(430, 160),
             pygame.Vector2(520, 260),
             pygame.Vector2(520, 340),
-            pygame.Vector2(430, 340),
+            pygame.Vector2(480, 220),
+            pygame.Vector2(460, 220),
+            pygame.Vector2(430, 440),
         ],
+
         [
-            pygame.Vector2(90, 220),
-            pygame.Vector2(160, 260),
-            pygame.Vector2(120, 320),
-        ],
-        [
-            pygame.Vector2(720, 360),
+            pygame.Vector2(620, 360),
             pygame.Vector2(820, 360),
+            pygame.Vector2(680, 400),
+            pygame.Vector2(630, 500),
             pygame.Vector2(820, 440),
-            pygame.Vector2(700, 460),
+            pygame.Vector2(600, 560),
         ],
     ]
+
 
 
 def spawn_bots() -> list[Bot]:

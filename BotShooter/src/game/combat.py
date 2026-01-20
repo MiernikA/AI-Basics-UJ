@@ -128,3 +128,8 @@ def has_line_of_sight(
         if line_intersects_polygon(start, end, poly):
             return False
     return True
+
+def is_reloading(bot: Bot) -> bool:
+    no_rail = bot.ammo_rail <= 0 or bot.reload_rail > 0.0
+    no_rocket = bot.ammo_rocket <= 0 or bot.reload_rocket > 0.0
+    return no_rail and no_rocket

@@ -9,6 +9,7 @@ from src.nav.astar import astar
 from src.game.entities import Bot, Resource
 from src.core.geometry import line_intersects_polygon
 from src.nav.graph import NavGraph
+from src.game.combat import is_reloading
 
 STATE_SEEK = "seek_enemy"
 STATE_FLEE = "flee"
@@ -26,8 +27,23 @@ def update_bot_ai(
     obstacles: list[list[pygame.Vector2]],
     nav: NavGraph,
 ) -> None:
+    if not hasattr(bot, "repath_timer"):
+        bot.repath_timer = 0.0
+    
+    bot.repath_timer -= dt
     ammo_total = bot.ammo_rail + bot.ammo_rocket
     enemy = closest_bot(bot, bots)
+    
+    if enemy and is_reloading(bot) and has_line_of_sight(bot.pos, enemy.pos, obstacles) and ammo_total > 0:
+        bot.state = STATE_RUN
+        bot.target_id = enemy.bot_id
+
+        if bot.repath_timer <= 0:
+            assign_flee_path(bot, nav, enemy)
+            bot.repath_timer = 0.5
+
+        return
+
     if bot.health < 35:
         bot.target_id = enemy.bot_id if enemy else None
         health_target = closest_resource_within_hops(
@@ -35,18 +51,54 @@ def update_bot_ai(
         )
         if health_target:
             bot.state = STATE_RUN
-            assign_path(bot, nav, health_target.pos)
-            return
+            
         if ammo_total > 0 and enemy is not None:
             bot.state = STATE_FIGHT_FOR_LIFE
-            assign_path(bot, nav, enemy.pos)
+            if bot.repath_timer <= 0:
+                assign_path(bot, nav, enemy.pos)
+                bot.repath_timer = 0.2
             return
+            
         bot.state = STATE_FLEE
         if enemy is not None:
-            assign_flee_path(bot, nav, enemy)
+            if bot.repath_timer <= 0:
+                assign_flee_path(bot, nav, enemy)
+                bot.repath_timer = 0.4
         elif bot.path_target() is None:
             assign_random_path(bot, nav)
         return
+
+    if ammo_total <= 0:
+        bot.state = STATE_GATHER
+        bot.target_id = None
+        target = closest_resource(bot, resources, kind_filter=("rail_ammo", "rocket_ammo"))
+        if target:
+            if bot.repath_timer <= 0 or (bot.goal and (bot.goal - target.pos).length_squared() > 1.0):
+                assign_path(bot, nav, target.pos)
+                bot.repath_timer = 0.5
+        elif bot.path_target() is None:
+            assign_random_path(bot, nav)
+        return
+
+    if enemy and has_line_of_sight(bot.pos, enemy.pos, obstacles):
+        bot.state = STATE_FIGHT
+        bot.target_id = enemy.bot_id
+        if bot.repath_timer <= 0:
+            assign_path(bot, nav, enemy.pos)
+            bot.repath_timer = 0.3
+            
+        if bot.path_target() is None:
+            assign_random_path(bot, nav)
+        return
+
+    bot.state = STATE_SEEK
+    bot.target_id = None
+    if enemy:
+        if bot.repath_timer <= 0:
+            assign_path(bot, nav, enemy.pos)
+            bot.repath_timer = 0.25 + random.uniform(0, 0.1)
+    elif bot.path_target() is None:
+        assign_random_path(bot, nav)
 
     if ammo_total <= 0:
         bot.state = STATE_GATHER
@@ -91,14 +143,44 @@ def assign_random_path(bot: Bot, nav: NavGraph) -> None:
 
 
 def assign_path(bot: Bot, nav: NavGraph, destination: pygame.Vector2) -> None:
-    start_node = nav.nearest_node(bot.pos)
+    if bot.goal and bot.path_target():
+        dist_sq = (bot.goal - destination).length_squared()
+        if dist_sq < 9.0:
+            return
+        
+    start_node = None
+    
+    current_target = bot.path_target()
+    if current_target:
+        start_node = nav.nearest_node(current_target)
+        
+        if start_node and (start_node.pos - current_target).length_squared() > 1.0:
+            start_node = nav.nearest_node(bot.pos)
+    else:
+        start_node = nav.nearest_node(bot.pos)
+
+    if not start_node:
+        start_node = nav.nearest_node(bot.pos)
+
     goal_node = nav.nearest_node(destination)
+    
     if not start_node or not goal_node:
         return
-    if bot.goal and (bot.goal - goal_node.pos).length_squared() < 9.0 and bot.path_target():
+
+    # Optymalizacja: jeśli start i cel to ten sam węzeł
+    if start_node.index == goal_node.index:
+        bot.set_path([destination])
+        bot.goal = destination
         return
+
     path_nodes = astar(nav, start_node, goal_node)
-    bot.set_path([node.pos for node in path_nodes])
+    path_points = [node.pos for node in path_nodes]
+    
+    if path_points:
+        path_points[-1] = destination
+        
+    bot.set_path(path_points)
+    bot.goal = destination
 
 
 def closest_resource(
