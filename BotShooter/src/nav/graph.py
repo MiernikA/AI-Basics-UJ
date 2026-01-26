@@ -34,11 +34,11 @@ class NavGraph:
 def generate_nav_graph(obstacles: list[list[pygame.Vector2]]) -> NavGraph:
     step = NAV_STEP
     radius = BOT_RADIUS
-    # Flood-fill grid inspired by Mat Buckland's "Programming Game AI by Example".
 
     def key(pos: pygame.Vector2) -> tuple[int, int]:
         return (int(round(pos.x)), int(round(pos.y)))
 
+    #nie budujemy grafu na przeszkodach
     def valid(pos: pygame.Vector2) -> bool:
         if not MAP_BOUNDS.collidepoint(pos.x, pos.y):
             return False
@@ -47,6 +47,7 @@ def generate_nav_graph(obstacles: list[list[pygame.Vector2]]) -> NavGraph:
                 return False
         return True
 
+    #kolejka do BFS
     nodes: list[NavNode] = []
     edges: dict[int, list[int]] = {}
     visited: dict[tuple[int, int], int] = {}
@@ -68,6 +69,7 @@ def generate_nav_graph(obstacles: list[list[pygame.Vector2]]) -> NavGraph:
         pygame.Vector2(-step, -step),
     ]
 
+    #BFS
     while queue:
         current = queue.popleft()
         current_index = visited[key(current)]

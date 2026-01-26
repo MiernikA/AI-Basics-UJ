@@ -18,6 +18,58 @@ STATE_FIGHT = "fight"
 STATE_RUN = "run"
 STATE_FIGHT_FOR_LIFE = "fight_for_life"
 
+# 1. STATE_RUN
+#    Warunki:
+#    - istnieje wróg
+#    - bot się przeładowuje
+#    - bot ma amunicję
+#    - wróg jest w linii widzenia
+# ------------------------------------------------------------
+#
+# 2. STATE_FIGHT_FOR_LIFE
+#    Warunki:
+#    - health < 35
+#    - istnieje wróg
+#    - bot ma amunicję
+#
+# ------------------------------------------------------------
+#
+# 3. STATE_FLEE
+#    Warunki:
+#    - health < 35
+#    - brak amunicji LUB brak przeciwnika
+#
+# ------------------------------------------------------------
+#
+# 4. STATE_GATHER
+#    Warunki:
+#    - brak amunicji (ammo_total <= 0)
+#
+# ------------------------------------------------------------
+#
+# 5. STATE_FIGHT
+#    Warunki:
+#    - istnieje wróg
+#    - wróg w linii widzenia
+#    - bot ma amunicję
+#    - health >= 35
+#
+# ------------------------------------------------------------
+#
+# 6. STATE_SEEK
+#    Warunki:
+#    - istnieje wróg
+#    - brak linii widzenia
+#    - bot ma amunicję
+#
+# ------------------------------------------------------------
+#
+# 7. FALLBACK / WANDER
+#    Warunki:
+#    - brak wroga
+#    - brak celu
+#
+
 
 def update_bot_ai(
     bot: Bot,
@@ -29,11 +81,11 @@ def update_bot_ai(
 ) -> None:
     if not hasattr(bot, "repath_timer"):
         bot.repath_timer = 0.0
-    
+
     bot.repath_timer -= dt
     ammo_total = bot.ammo_rail + bot.ammo_rocket
     enemy = closest_bot(bot, bots)
-    
+
     if enemy and is_reloading(bot) and has_line_of_sight(bot.pos, enemy.pos, obstacles) and ammo_total > 0:
         bot.state = STATE_RUN
         bot.target_id = enemy.bot_id
@@ -51,14 +103,14 @@ def update_bot_ai(
         )
         if health_target:
             bot.state = STATE_RUN
-            
+
         if ammo_total > 0 and enemy is not None:
             bot.state = STATE_FIGHT_FOR_LIFE
             if bot.repath_timer <= 0:
                 assign_path(bot, nav, enemy.pos)
                 bot.repath_timer = 0.2
             return
-            
+
         bot.state = STATE_FLEE
         if enemy is not None:
             if bot.repath_timer <= 0:
@@ -86,7 +138,7 @@ def update_bot_ai(
         if bot.repath_timer <= 0:
             assign_path(bot, nav, enemy.pos)
             bot.repath_timer = 0.3
-            
+
         if bot.path_target() is None:
             assign_random_path(bot, nav)
         return
@@ -147,13 +199,13 @@ def assign_path(bot: Bot, nav: NavGraph, destination: pygame.Vector2) -> None:
         dist_sq = (bot.goal - destination).length_squared()
         if dist_sq < 9.0:
             return
-        
+
     start_node = None
-    
+
     current_target = bot.path_target()
     if current_target:
         start_node = nav.nearest_node(current_target)
-        
+
         if start_node and (start_node.pos - current_target).length_squared() > 1.0:
             start_node = nav.nearest_node(bot.pos)
     else:
@@ -163,7 +215,7 @@ def assign_path(bot: Bot, nav: NavGraph, destination: pygame.Vector2) -> None:
         start_node = nav.nearest_node(bot.pos)
 
     goal_node = nav.nearest_node(destination)
-    
+
     if not start_node or not goal_node:
         return
 
@@ -175,10 +227,10 @@ def assign_path(bot: Bot, nav: NavGraph, destination: pygame.Vector2) -> None:
 
     path_nodes = astar(nav, start_node, goal_node)
     path_points = [node.pos for node in path_nodes]
-    
+
     if path_points:
         path_points[-1] = destination
-        
+
     bot.set_path(path_points)
     bot.goal = destination
 

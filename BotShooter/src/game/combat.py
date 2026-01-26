@@ -34,8 +34,11 @@ def try_fire(
         if bot.reload_rail > 0.0 or bot.ammo_rail <= 0:
             return False
         return fire_rail(bot, target, shots)
+
+    #kierunek
     bot.aim_dir = aim_vec.normalize()
     use_rocket = bot.ammo_rocket > 0 and bot.reload_rocket <= 0.0
+
     if use_rocket:
         fire_rocket(bot, target, rockets)
         return False
@@ -47,12 +50,16 @@ def try_fire(
 def fire_rail(bot: Bot, target: Bot, shots: list[RailShot]) -> bool:
     bot.ammo_rail -= 1
     bot.reload_rail = RAIL_RELOAD
+
+    #kierunek strzalu/faktyczny kierunek do celu
     aim_dir = bot.aim_with_spread(RAIL_SPREAD_DEG)
     shot_vec = target.pos - bot.pos
     if shot_vec.length_squared() <= 0.0001:
         return False
     shot_dir = shot_vec.normalize()
     shots.append(RailShot(bot.pos.copy(), bot.pos + aim_dir * 1200, RAIL_BEAM_TIME))
+
+    #czy trafił?
     if aim_dir.dot(shot_dir) > 0.9:
         prev_health = target.health
         target.health = max(0, target.health - RAIL_DAMAGE)
@@ -102,6 +109,8 @@ def explode(rocket: Rocket, bots: list[Bot], explosions: list[Explosion]) -> lis
     rocket.alive = False
     explosions.append(Explosion(rocket.pos.copy(), 0.25, ROCKET_BLAST_RADIUS))
     kills: list[tuple[int, int]] = []
+
+    #obszarowe obrazenia
     for bot in bots:
         dist = (bot.pos - rocket.pos).length()
         if dist <= ROCKET_BLAST_RADIUS:

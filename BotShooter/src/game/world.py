@@ -25,6 +25,8 @@ class World:
         self.time += dt
         if self.winner_id is not None:
             return
+
+        #respawny
         for bot in self.bots:
             if bot.health <= 0:
                 bot.respawn_timer -= dt
@@ -33,6 +35,8 @@ class World:
                 continue
             bot.update_timers(dt)
             ai.update_bot_ai(bot, self.bots, self.resources, dt, self.obstacles, self.nav)
+
+        #core
         for bot in self.bots:
             if bot.health <= 0:
                 continue
@@ -40,8 +44,11 @@ class World:
             if target is not None:
                 old_pos = bot.pos.copy()
                 bot.move_towards(target, dt)
+                #kolizje
                 if overlaps_any(bot, self.bots):
                     bot.pos = old_pos
+
+            #walka
             if bot.state in (ai.STATE_FIGHT, ai.STATE_FIGHT_FOR_LIFE) and bot.target_id is not None:
                 target_bot = next((b for b in self.bots if b.bot_id == bot.target_id), None)
                 if target_bot:

@@ -109,6 +109,8 @@ class Bot:
             return
         self.desired_dir = direction.normalize()
         step = self.speed * dt
+
+        # Nie przeskakuj celu
         if step >= dist:
             self.pos = target.copy()
             self.advance_path()
