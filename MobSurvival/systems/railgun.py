@@ -46,7 +46,6 @@ class Railgun:
         closest_ob_point = None
         closest_ob_dist = float("inf")
 
-        # Obstacles block the shot
         for ob in obstacles:
             hit_point = self._ray_circle_intersection(start, end, ob)
             if hit_point is not None:
@@ -55,7 +54,6 @@ class Railgun:
                     closest_ob_point = hit_point
                     closest_ob_dist = dist
 
-        # Enemies can be hit but the beam stops at the first one
         for enemy in enemies:
             hit_point = self._ray_circle_intersection(start, end, enemy)
             if hit_point is not None:
@@ -65,7 +63,6 @@ class Railgun:
                     closest_enemy_point = hit_point
                     closest_enemy_dist = dist
 
-        # If an obstacle is closer than the nearest enemy, no enemy is hit.
         if closest_ob_point is not None and closest_ob_dist <= closest_enemy_dist:
             return None, None, closest_ob_point
 

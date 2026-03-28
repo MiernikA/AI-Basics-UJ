@@ -9,7 +9,7 @@ _cluster_counter = 0
 def spawn_enemies(num, width, height, obstacles, enemy_radius=12, max_attempts=30):
     enemies = []
     center_x, center_y = width // 2, height // 2
-    safe_radius = 50
+    safe_radius = 180
 
     for _ in range(num):
         for attempt in range(max_attempts):
