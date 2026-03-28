@@ -13,8 +13,6 @@ from src.core.config import (
     BOT_SPEED,
     COLOR_BOT,
     COLOR_BOT_ENEMY,
-    COLOR_ROCKET,
-    PICKUP_RADIUS,
 )
 from src.core.geometry import rotate_vector
 
@@ -110,7 +108,6 @@ class Bot:
         self.desired_dir = direction.normalize()
         step = self.speed * dt
 
-        # Nie przeskakuj celu
         if step >= dist:
             self.pos = target.copy()
             self.advance_path()

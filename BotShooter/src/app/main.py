@@ -33,8 +33,8 @@ def main() -> int:
 
         screen.fill(COLOR_BG)
         world.draw(screen, font)
-        if DEBUG_DRAW_NAV:
-            world.draw_debug(screen)
+        if DEBUG_DRAW_NAV or DEBUG_DRAW_PATHS:
+            world.draw_debug(screen, draw_nav=DEBUG_DRAW_NAV, draw_paths=DEBUG_DRAW_PATHS)
         if DEBUG_DRAW_STATE:
             draw_hud(screen, font, font_bold, world)
         pygame.display.flip()

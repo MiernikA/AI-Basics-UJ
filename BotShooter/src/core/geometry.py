@@ -6,13 +6,6 @@ from .config import EPS
 
 
 def distance_point_to_segment(point: pygame.Vector2, a: pygame.Vector2, b: pygame.Vector2) -> float:
-    # AB = B − A
-    # |AB|² = AB · AB
-    # t = ((P − A) · AB) / |AB|²
-    # t ∈ [0, 1] = max(0, min(t, 1))
-    # C = A + t·AB
-    # d = |P − C|
-
     ab = b - a
     denom = ab.length_squared()
     if denom <= EPS:
@@ -24,9 +17,8 @@ def distance_point_to_segment(point: pygame.Vector2, a: pygame.Vector2, b: pygam
     closest = a + ab * t
     return (point - closest).length()
 
-def point_in_polygon(point: pygame.Vector2, polygon: list[pygame.Vector2]) -> bool:
-    #ray casting
 
+def point_in_polygon(point: pygame.Vector2, polygon: list[pygame.Vector2]) -> bool:
     inside = False
     count = len(polygon)
     if count < 3:
@@ -36,7 +28,6 @@ def point_in_polygon(point: pygame.Vector2, polygon: list[pygame.Vector2]) -> bo
         pi = polygon[i]
         pj = polygon[j]
 
-        # Sprawdzenie, czy krawędź przecina poziomą półprostą wychodzącą z punktu
         intersects = ((pi.y > point.y) != (pj.y > point.y)) and (
             point.x < (pj.x - pi.x) * (point.y - pi.y) / (pj.y - pi.y + EPS) + pi.x
         )
@@ -52,7 +43,6 @@ def circle_intersects_polygon(
     if point_in_polygon(center, polygon):
         return True
     count = len(polygon)
-    # Okrąg dotyka krawędzi
     for i in range(count):
         a = polygon[i]
         b = polygon[(i + 1) % count]
@@ -67,7 +57,6 @@ def line_intersects_polygon(
     if point_in_polygon(start, polygon) or point_in_polygon(end, polygon):
         return True
 
-    # Odcinek przecina krawędź
     count = len(polygon)
     for i in range(count):
         a = polygon[i]
