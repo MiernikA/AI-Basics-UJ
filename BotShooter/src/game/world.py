@@ -3,8 +3,17 @@ from __future__ import annotations
 import pygame
 
 from src.ai import behavior as ai
+from src.core.config import (
+    AMMO_START_RAIL,
+    AMMO_START_ROCKET,
+    BOT_MAX_HEALTH,
+    COLOR_ROCKET,
+    COLOR_WALL,
+    MAP_BOUNDS,
+    PICKUP_RESPAWN,
+    RAIL_BEAM_TIME,
+)
 from src.game import combat
-from src.core.config import AMMO_START_RAIL, BOT_MAX_HEALTH, COLOR_ROCKET, PICKUP_RESPAWN, RAIL_BEAM_TIME
 from src.game.entities import Bot, Explosion, RailShot, Resource, Rocket
 from src.nav.graph import generate_nav_graph
 
@@ -26,7 +35,6 @@ class World:
         if self.winner_id is not None:
             return
 
-        #respawny
         for bot in self.bots:
             if bot.health <= 0:
                 bot.respawn_timer -= dt
@@ -36,7 +44,6 @@ class World:
             bot.update_timers(dt)
             ai.update_bot_ai(bot, self.bots, self.resources, dt, self.obstacles, self.nav)
 
-        #core
         for bot in self.bots:
             if bot.health <= 0:
                 continue
@@ -44,11 +51,9 @@ class World:
             if target is not None:
                 old_pos = bot.pos.copy()
                 bot.move_towards(target, dt)
-                #kolizje
                 if overlaps_any(bot, self.bots):
                     bot.pos = old_pos
 
-            #walka
             if bot.state in (ai.STATE_FIGHT, ai.STATE_FIGHT_FOR_LIFE) and bot.target_id is not None:
                 target_bot = next((b for b in self.bots if b.bot_id == bot.target_id), None)
                 if target_bot:
@@ -77,6 +82,8 @@ class World:
         self.explosions = [explosion for explosion in self.explosions if explosion.timer > 0.0]
 
     def draw(self, surface: pygame.Surface, font: pygame.font.Font) -> None:
+        pygame.draw.rect(surface, COLOR_WALL, MAP_BOUNDS, 3)
+
         for poly in self.obstacles:
             pygame.draw.polygon(surface, (70, 85, 96), poly)
 
@@ -139,12 +146,21 @@ class World:
             rect = label.get_rect(center=(surface.get_width() / 2, surface.get_height() - 16))
             surface.blit(label, rect)
 
-    def draw_debug(self, surface: pygame.Surface) -> None:
-        for node in self.nav.nodes:
-            pygame.draw.circle(surface, (40, 50, 60), node.pos, 2)
-        for bot in self.bots:
-            if bot.path and len(bot.path) > 1:
-                pygame.draw.lines(surface, (120, 180, 200), False, bot.path, 2)
+    def draw_debug(
+        self,
+        surface: pygame.Surface,
+        *,
+        draw_nav: bool = True,
+        draw_paths: bool = True,
+    ) -> None:
+        if draw_nav:
+            for node in self.nav.nodes:
+                pygame.draw.circle(surface, (40, 50, 60), node.pos, 2)
+        if draw_paths:
+            for bot in self.bots:
+                if bot.path and len(bot.path) > 1:
+                    pygame.draw.lines(surface, (120, 180, 200), False, bot.path, 2)
+
     def handle_resources(self, dt: float) -> None:
         for resource in self.resources:
             if not resource.active:
@@ -162,24 +178,21 @@ class World:
                     break
 
 
-
 def build_obstacles() -> list[list[pygame.Vector2]]:
     return [
         [
             pygame.Vector2(250, 140),
-            pygame.Vector2(380, 340),           
+            pygame.Vector2(380, 340),
             pygame.Vector2(380, 220),
             pygame.Vector2(250, 220),
         ],
-
         [
             pygame.Vector2(440, 100),
-            pygame.Vector2(680, 150),           
+            pygame.Vector2(680, 150),
             pygame.Vector2(740, 310),
             pygame.Vector2(520, 220),
             pygame.Vector2(680, 190),
         ],
-
         [
             pygame.Vector2(200, 420),
             pygame.Vector2(100, 360),
@@ -187,7 +200,6 @@ def build_obstacles() -> list[list[pygame.Vector2]]:
             pygame.Vector2(260, 450),
             pygame.Vector2(140, 550),
         ],
-
         [
             pygame.Vector2(430, 160),
             pygame.Vector2(520, 260),
@@ -196,7 +208,6 @@ def build_obstacles() -> list[list[pygame.Vector2]]:
             pygame.Vector2(460, 220),
             pygame.Vector2(430, 440),
         ],
-
         [
             pygame.Vector2(620, 360),
             pygame.Vector2(820, 360),
@@ -206,7 +217,6 @@ def build_obstacles() -> list[list[pygame.Vector2]]:
             pygame.Vector2(600, 560),
         ],
     ]
-
 
 
 def spawn_bots() -> list[Bot]:
@@ -258,11 +268,10 @@ def respawn_bot(bot: Bot) -> None:
     bot.pos = bot.spawn_pos.copy()
     bot.health = BOT_MAX_HEALTH
     bot.ammo_rail = AMMO_START_RAIL
-    bot.ammo_rocket = 0
+    bot.ammo_rocket = AMMO_START_ROCKET
     bot.reload_rail = 0.0
     bot.reload_rocket = 0.0
     bot.state = "seek_enemy"
-    return
 
 
 def register_kill(world: World, killer_id: int, victim_id: int) -> None:
